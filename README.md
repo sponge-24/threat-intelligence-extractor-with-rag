@@ -2,8 +2,8 @@
 
 A powerful web application for extracting and analyzing threat intelligence from PDF security reports using Retrieval Augmented Generation (RAG).
 
-![Threat Intelligence Extractor](/outputs/output_1.JPG)
-![Threat Intelligence Extractor](/outputs/output_2.JPG)
+![output_1](/outputs/output_1.JPG)
+![output_2](/outputs/output_2.JPG)
 
 ## Features
 
