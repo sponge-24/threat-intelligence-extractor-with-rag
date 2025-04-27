@@ -1,0 +1,720 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Intelligence Extractor</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        body {
+            background-color: #0b1021;
+            color: #8892b0;
+            font-family: 'Share Tech Mono', monospace;
+            background-image: 
+                linear-gradient(0deg, transparent 24%, 
+                rgba(32, 43, 96, 0.3) 25%, 
+                rgba(32, 43, 96, 0.3) 26%, 
+                transparent 27%, transparent 74%, 
+                rgba(32, 43, 96, 0.3) 75%, 
+                rgba(32, 43, 96, 0.3) 76%, 
+                transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, 
+                rgba(32, 43, 96, 0.3) 25%, 
+                rgba(32, 43, 96, 0.3) 26%, 
+                transparent 27%, transparent 74%, 
+                rgba(32, 43, 96, 0.3) 75%, 
+                rgba(32, 43, 96, 0.3) 76%, 
+                transparent 77%, transparent);
+            background-size: 50px 50px;
+        }
+
+        .cyber-card {
+            background-color: rgba(16, 24, 39, 0.9);
+            border: 2px solid #2d3f87;
+            box-shadow: 0 0 20px rgba(88, 28, 135, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #2d3f87, #58128c, #2d3f87);
+            z-index: -1;
+            animation: borderGlow 3s ease infinite;
+        }
+
+        .cyber-button {
+            background-color: rgba(45, 63, 135, 0.8);
+            border: 1px solid #58128c;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cyber-button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent, 
+                rgba(88, 28, 135, 0.3), 
+                transparent);
+            transform: rotate(45deg);
+            transition: 0.5s;
+        }
+
+        .cyber-button:hover::after {
+            transform: rotate(45deg) translate(50%, 50%);
+        }
+
+        .cyber-button:hover {
+            background-color: rgba(88, 28, 135, 0.8);
+            box-shadow: 0 0 15px rgba(88, 28, 135, 0.5);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        .cyber-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .cyber-button:disabled:hover::after {
+            transform: rotate(45deg);
+        }
+
+        .json-display {
+            background-color: rgba(13, 18, 30, 0.95);
+            border: 1px solid #2d3f87;
+            font-family: 'Share Tech Mono', monospace;
+            color: #a8b2d1;
+            padding: 1rem;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .json-display::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .json-display::-webkit-scrollbar-track {
+            background: rgba(13, 18, 30, 0.95);
+        }
+
+        .json-display::-webkit-scrollbar-thumb {
+            background: #2d3f87;
+            border-radius: 4px;
+        }
+
+        .json-display::-webkit-scrollbar-thumb:hover {
+            background: #58128c;
+        }
+
+        @keyframes borderGlow {
+            0% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.5;
+            }
+        }
+
+        .checkbox-container {
+            position: relative;
+            padding-left: 35px;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .checkbox-container input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .checkmark {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            height: 20px;
+            width: 20px;
+            background-color: #0b1021;
+            border: 2px solid #2d3f87;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-container:hover input ~ .checkmark {
+            background-color: #1a2442;
+            box-shadow: 0 0 10px rgba(45, 63, 135, 0.5);
+        }
+
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: #58128c;
+            border-color: #58128c;
+            box-shadow: 0 0 10px rgba(88, 28, 135, 0.5);
+        }
+
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        .checkbox-container input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        .checkbox-container .checkmark:after {
+            left: 6px;
+            top: 2px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .alert {
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .alert-error {
+            background-color: rgba(185, 28, 28, 0.9);
+            border: 1px solid #dc2626;
+            color: #fee2e2;
+        }
+
+        .alert-success {
+            background-color: rgba(6, 95, 70, 0.9);
+            border: 1px solid #059669;
+            color: #d1fae5;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            text-shadow: 0 0 10px rgba(88, 28, 135, 0.8);
+            letter-spacing: 3px;
+        }
+
+        h2 {
+            letter-spacing: 2px;
+        }
+
+        .loading {
+            position: relative;
+        }
+
+        .loading:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: rgba(11, 16, 33, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #a8b2d1;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-name {
+            margin-top: 0.5rem;
+            color: #a8b2d1;
+            font-size: 0.875rem;
+        }
+
+        .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            z-index: 10;
+        }
+        td:last-child {
+            display: flex;
+            flex-wrap: wrap;
+            word-break: break-word;
+        }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .image-card {
+            background-color: rgba(16, 24, 39, 0.9);
+            border: 2px solid #2d3f87;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+
+        .image-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(88, 28, 135, 0.4);
+        }
+
+        .image-container {
+            position: relative;
+            padding-top: 75%; /* 4:3 aspect ratio */
+        }
+
+        .image-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: rgba(11, 16, 33, 0.8);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            margin: auto;
+            display: block;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        .cyber-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="container mx-auto max-w-10xl">
+        <h1 class="text-4xl font-bold text-purple-400 mb-8 text-center">THREAT INTELLIGENCE EXTRACTOR</h1>
+        
+        <!-- Error Alert -->
+        <div id="errorAlert" class="hidden bg-red-900 border-2 border-red-500 text-red-100 px-4 py-3 rounded mb-4">
+            <span id="errorMessage"></span>
+        </div>
+
+        <!-- Success Alert -->
+        <div id="successAlert" class="hidden bg-green-900 border-2 border-green-500 text-green-100 px-4 py-3 rounded mb-4">
+            <span id="successMessage"></span>
+        </div>
+        
+        <!-- Upload Section -->
+        <div class="cyber-card rounded-lg p-6 mb-8">
+            <h2 class="text-2xl text-blue-400 mb-4">UPLOAD PDF REPORT</h2>
+            <div class="border-2 border-dashed border-purple-500 rounded-lg p-8 text-center">
+                <input type="file" id="pdfFile" accept=".pdf" class="hidden">
+                <label for="pdfFile" class="cyber-button px-6 py-3 rounded-lg cursor-pointer inline-block text-blue-300 hover:text-white">
+                    SELECT PDF FILE
+                </label>
+                <p class="mt-4 text-sm" id="fileName"></p>
+            </div>
+            <button id="uploadBtn" class="cyber-button mt-4 px-6 py-3 rounded-lg w-full text-blue-300 hover:text-white disabled:opacity-50" disabled>
+                PROCESS REPORT
+            </button>
+            <button id="chatButton" onclick="window.open('/chat_interface', '_blank')" 
+                    class="cyber-button mt-4 px-6 py-3 rounded-lg w-full text-blue-300 hover:text-white disabled:opacity-50"
+                    disabled>
+                CHAT WITH PDF
+            </button>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="cyber-card rounded-lg p-6 hidden">
+            <h2 class="text-2xl text-blue-400 mb-4">EXTRACTED INTELLIGENCE</h2>
+            
+            <!-- Intelligence Type Selection -->
+            <div class="mb-6">
+                <label class="block text-blue-400 mb-4">SELECT INTELLIGENCE TYPES:</label>
+                <div class="grid grid-cols-2 gap-6">
+                    <label class="checkbox-container">
+                        <input type="checkbox" class="intel-type" value="iocs">
+                        <span class="checkmark"></span>
+                        <span class="ml-2">IoCs</span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" class="intel-type" value="threat_actors">
+                        <span class="checkmark"></span>
+                        <span class="ml-2">Threat Actors</span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" class="intel-type" value="ttps">
+                        <span class="checkmark"></span>
+                        <span class="ml-2">TTPs</span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" class="intel-type" value="malware">
+                        <span class="checkmark"></span>
+                        <span class="ml-2">Malware</span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" class="intel-type" value="targeted_entities">
+                        <span class="checkmark"></span>
+                        <span class="ml-2">Targeted Entities</span>
+                    </label>
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="selectAll">
+                        <span class="checkmark"></span>
+                        <span class="ml-2">Select All</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- JSON Display -->
+            <div class="relative">
+                <pre id="jsonDisplay" class="json-display rounded-lg p-4 text-sm overflow-x-auto whitespace-pre-wrap"></pre>
+                <button id="copyBtn" class="cyber-button absolute top-2 right-2 px-3 py-1 rounded text-sm text-blue-300 hover:text-white">
+                    COPY JSON
+                </button>
+            </div>
+        </div>
+        <div id="hashAnalysisCard" class="cyber-card rounded-lg p-6 mt-8 hidden">
+            <h2 class="text-2xl text-blue-400 mb-4">HASH ANALYSIS</h2>
+            <div class="mb-4">
+                <p class="text-blue-300 mb-2">Click the button below to analyze all hashes using VirusTotal:</p>
+                <button id="analyzeHashesBtn" class="cyber-button px-6 py-3 rounded-lg w-full text-blue-300 hover:text-white">
+                    ANALYZE HASHES
+                </button>
+            </div>   
+            <div id="hashAnalysisResults" class="hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full bg-gray-900 text-sm">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-2 text-left text-blue-400 border-b border-purple-500">Hash</th>
+                                <th class="px-4 py-2 text-left text-blue-400 border-b border-purple-500">Type</th>
+                                <th class="px-4 py-2 text-center text-blue-400 border-b border-purple-500">Malicious</th>
+                                <th class="px-4 py-2 text-left text-blue-400 border-b border-purple-500">File Type</th>
+                                <th class="px-4 py-2 text-left text-blue-400 border-b border-purple-500">Tags</th>
+                                <th class="px-4 py-2 text-left text-blue-400 border-b border-purple-500">Tlsh</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hashAnalysisTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="imageGallerySection" class="cyber-card rounded-lg p-6 mt-8 hidden">
+            <h2 class="text-2xl text-blue-400 mb-4">EXTRACTED IMAGES</h2>
+            <div id="imageGallery" class="image-gallery">
+                <!-- Images will be populated here -->
+            </div>
+        </div>
+        <div id="imageModal" class="modal">
+            <span class="modal-close">&times;</span>
+            <img class="modal-content" id="modalImage">
+        </div>
+    </div>
+
+    <script>
+        // Utility functions
+        function showError(message) {
+            const alert = document.getElementById('errorAlert');
+            document.getElementById('errorMessage').textContent = message;
+            alert.classList.remove('hidden');
+            setTimeout(() => alert.classList.add('hidden'), 5000);
+        }
+
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            document.getElementById('successMessage').textContent = message;
+            alert.classList.remove('hidden');
+            setTimeout(() => alert.classList.add('hidden'), 5000);
+        }
+
+        async function updateJsonDisplay() {
+            const selectedTypes = Array.from(document.querySelectorAll('.intel-type:checked')).map(cb => cb.value);
+            
+            try {
+                const response = await fetch('/get_intelligence', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ types: selectedTypes })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to retrieve intelligence data');
+                }
+
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                document.getElementById('jsonDisplay').textContent = 
+                    JSON.stringify(result.data, null, 2);
+                
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // File selection
+        document.getElementById('pdfFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                if (!file.type.match('application/pdf')) {
+                    showError('Please select a PDF file');
+                    this.value = '';
+                    document.getElementById('fileName').textContent = '';
+                    document.getElementById('uploadBtn').disabled = true;
+                    document.getElementById('chatButton').disabled = true;
+                    return;
+                }
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('uploadBtn').disabled = false;
+                document.getElementById('chatButton').disabled = true; 
+            }
+        });
+
+        // File upload and processing
+        document.getElementById('uploadBtn').addEventListener('click', async function() {
+            const file = document.getElementById('pdfFile').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                this.disabled = true;
+                this.textContent = 'PROCESSING...';
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to process file');
+                }
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                showSuccess('File processed successfully');
+                document.getElementById('resultsSection').classList.remove('hidden');
+                document.getElementById('hashAnalysisCard').classList.remove('hidden');
+                
+                // Enable the chat button after successful processing
+                document.getElementById('chatButton').disabled = false;
+
+                // Select IoCs by default and update display
+                document.querySelector('.intel-type[value="iocs"]').checked = true;
+                await updateJsonDisplay();
+
+                displayExtractedImages();
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                this.disabled = false;
+                this.textContent = 'PROCESS REPORT';
+            }
+        });
+
+        // Intelligence type selection
+        document.querySelectorAll('.intel-type').forEach(checkbox => {
+            checkbox.addEventListener('change', updateJsonDisplay);
+        });
+
+        document.getElementById('selectAll').addEventListener('change', function(e) {
+            document.querySelectorAll('.intel-type').forEach(checkbox => {
+                checkbox.checked = e.target.checked;
+            });
+            updateJsonDisplay();
+        });
+
+        // Copy JSON
+        document.getElementById('copyBtn').addEventListener('click', async function() {
+            try {
+                const jsonText = document.getElementById('jsonDisplay').textContent;
+                await navigator.clipboard.writeText(jsonText);
+                const originalText = this.textContent;
+                this.textContent = 'COPIED!';
+                setTimeout(() => {
+                    this.textContent = originalText;
+                }, 2000);
+                showSuccess('JSON copied to clipboard');
+            } catch (error) {
+                showError('Failed to copy JSON');
+            }
+        });
+        document.getElementById('analyzeHashesBtn').addEventListener('click', async function() {
+            try {
+                this.disabled = true;
+                this.textContent = 'ANALYZING...';
+                
+                const response = await fetch('/analyze_hashes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to analyze hashes');
+                }
+                
+                const result = await response.json();
+                
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+                
+                // Display results in table
+                const tableBody = document.getElementById('hashAnalysisTable');
+                tableBody.innerHTML = '';
+                
+                if (result.data.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td colspan="6" class="px-4 py-4 text-center border-b border-purple-500">
+                            No hashes found for analysis
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                } else {
+                    result.data.forEach(hash => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-4 py-2 border-b border-purple-500 font-mono">${hash.hash}</td>
+                            <td class="px-4 py-2 border-b border-purple-500">${hash.hash_type}</td>
+                            <td class="px-4 py-2 border-b border-purple-500 text-center ${hash.malicious > 0 ? 'text-red-400' : ''}">${hash.malicious}</td>
+                            <td class="px-4 py-2 border-b border-purple-500">${hash.file_type || 'N/A'}</td>
+                            <td class="px-4 py-2 border-b border-purple-500">${hash.tags.join(', ') || 'N/A'}</td>
+                            <td class="px-4 py-2 border-b border-purple-500">${hash.tlsh || 'N/A'}</td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                }
+                
+                document.getElementById('hashAnalysisResults').classList.remove('hidden');
+                showSuccess('Hash analysis completed');
+                
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                this.disabled = false;
+                this.textContent = 'ANALYZE HASHES';
+            }
+        });
+        function displayExtractedImages() {
+            const gallerySection = document.getElementById('imageGallerySection');
+            const gallery = document.getElementById('imageGallery');
+            
+            // Get list of files from the images directory
+            fetch('/list_images')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.images && data.images.length > 0) {
+                        gallery.innerHTML = '';
+                        gallerySection.classList.remove('hidden');
+                        
+                        data.images.forEach((image, index) => {
+                            const card = document.createElement('div');
+                            card.className = 'image-card';
+                            card.innerHTML = `
+                                <div class="image-container">
+                                    <img src="/images/${image}" alt="Extracted image ${index + 1}">
+                                </div>
+                            `;
+                            gallery.appendChild(card);
+
+                            // Add click handler for modal
+                            card.querySelector('img').onclick = function() {
+                                const modal = document.getElementById('imageModal');
+                                const modalImg = document.getElementById('modalImage');
+                                modal.style.display = "block";
+                                modalImg.src = this.src;
+                            };
+                        });
+                    }
+                })
+                .catch(error => {
+                    showError('Failed to load images');
+                    console.error('Error:', error);
+                });
+        }
+        // Modal close handler
+        document.querySelector('.modal-close').onclick = function() {
+            document.getElementById('imageModal').style.display = "none";
+        };
+
+        // Close modal when clicking outside the image
+        document.getElementById('imageModal').onclick = function(event) {
+            if (event.target === this) {
+                this.style.display = "none";
+            }
+        };
+    </script>
+</body>
+</html>
