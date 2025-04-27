@@ -1,0 +1,9 @@
+python-dotenv
+werkzeug
+flask
+pymupdf4llm
+langchain
+langchain_huggingface
+langchain_community
+chromadb
+requests

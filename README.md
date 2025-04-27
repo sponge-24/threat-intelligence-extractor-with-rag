@@ -2,7 +2,8 @@
 
 A powerful web application for extracting and analyzing threat intelligence from PDF security reports using Retrieval Augmented Generation (RAG).
 
-![Threat Intelligence Extractor](https://github.com/your-username/threat-intelligence-extractor-with-rag/raw/main/screenshots/demo.png)
+![Threat Intelligence Extractor](/outputs/output_1.JPG)
+![Threat Intelligence Extractor](/outputs/output_2.JPG)
 
 ## Features
 
@@ -78,7 +79,7 @@ A powerful web application for extracting and analyzing threat intelligence from
 
 2. Start the application:
    ```bash
-   python app.py
+   python main.py
    ```
 
 3. Open your browser and navigate to:
